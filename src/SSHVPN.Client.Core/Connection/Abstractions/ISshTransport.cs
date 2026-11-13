@@ -9,4 +9,6 @@ public interface ISshTransport
         CancellationToken cancellationToken);
 
     void Disconnect();
+
+    Task<string> ExecuteCommandAsync(string command, CancellationToken cancellationToken);
 }

@@ -37,7 +37,14 @@ public sealed class SshTransport : ISshTransport, IDisposable
 
         client.HostKeyReceived += (_, eventArgs) =>
         {
-            eventArgs.CanTrust = string.Equals(eventArgs.FingerPrintSHA256,
+            System.Diagnostics.Debug.WriteLine(
+                $"Server fingerprint: {eventArgs.FingerPrintSHA256}");
+
+            System.Diagnostics.Debug.WriteLine(
+                $"Expected fingerprint: {options.ExpectedHostKeyFingerprint}");
+
+            eventArgs.CanTrust = string.Equals(
+                eventArgs.FingerPrintSHA256,
                 options.ExpectedHostKeyFingerprint,
                 StringComparison.Ordinal);
         };
@@ -97,6 +104,35 @@ public sealed class SshTransport : ISshTransport, IDisposable
         }
     }
 
+    public async Task<string> ExecuteCommandAsync(
+        string command,
+        CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(command);
+
+        if (!IsConnected || _client is null)
+        {
+            throw new InvalidOperationException(
+                "SSH connection is not established.");
+        }
+
+        cancellationToken.ThrowIfCancellationRequested();
+
+        using var sshCommand = _client.CreateCommand(command);
+
+        await sshCommand.ExecuteAsync(cancellationToken);
+        
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (sshCommand.ExitStatus != 0)
+        {
+            throw new InvalidOperationException(
+                $"Remote command failed: {sshCommand.Error}");
+        }
+
+        return sshCommand.Result;
+    }
+
     public void Dispose()
     {
         _client?.Dispose();
@@ -108,4 +144,6 @@ public sealed class SshTransport : ISshTransport, IDisposable
         
         GC.SuppressFinalize(this);
     }
+    
+    
 }

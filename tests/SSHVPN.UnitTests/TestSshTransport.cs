@@ -30,4 +30,23 @@ public class TestSshTransport : ISshTransport
         DisconnectCalls++;
         IsConnected = false;
     }
+    
+    public string CommandOutput { get; set; } = "test output";
+
+    public string? LastCommand { get; private set; }
+
+    public Task<string> ExecuteCommandAsync(
+        string command,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (!IsConnected)
+            throw new InvalidOperationException(
+                "SSH connection is not established.");
+
+        LastCommand = command;
+
+        return Task.FromResult(CommandOutput);
+    }
 }
