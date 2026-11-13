@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using SSHVPN.Client.Core;
-using SSHVPN.Client.Core.Connection.Abstraction;
+using SSHVPN.Client.Core.Connection.Abstractions;
 
 namespace SSHVPN.UnitTests;
 

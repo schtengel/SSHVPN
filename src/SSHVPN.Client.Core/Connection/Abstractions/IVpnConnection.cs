@@ -1,4 +1,4 @@
-namespace SSHVPN.Client.Core.Connection.Abstraction;
+namespace SSHVPN.Client.Core.Connection.Abstractions;
 
 public interface IVpnConnection
 {

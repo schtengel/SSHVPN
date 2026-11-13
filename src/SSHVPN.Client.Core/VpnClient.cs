@@ -1,4 +1,4 @@
-using SSHVPN.Client.Core.Connection.Abstraction;
+using SSHVPN.Client.Core.Connection.Abstractions;
 
 namespace SSHVPN.Client.Core;
 
