@@ -1,0 +1,22 @@
+# IDE
+.vs/
+.idea/
+.vscode/
+
+# .NET build
+**/bin/
+**/obj/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
