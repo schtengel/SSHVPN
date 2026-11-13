@@ -8,6 +8,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using SSHVPN.Client.Core.Connection.Abstractions;
 
 namespace SSHVPN.Client;
 
@@ -16,8 +17,12 @@ namespace SSHVPN.Client;
 /// </summary>
 public partial class MainWindow : Window
 {
-    public MainWindow()
+    private readonly IVpnConnection _vpnConnection;
+    
+    public MainWindow(IVpnConnection vpnConnection)
     {
         InitializeComponent();
+
+        _vpnConnection = vpnConnection;
     }
 }
