@@ -24,4 +24,8 @@
     <ProjectReference Include="..\..\src\SSHVPN.Client.Core\SSHVPN.Client.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Fakes\" />
+  </ItemGroup>
+
 </Project>
