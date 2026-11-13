@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/SSHVPN.Client.Core/SSHVPN.Client.Core.csproj" />
+    <Project Path="src/SSHVPN.Client.Infrastructure/SSHVPN.Client.Infrastructure.csproj" />
     <Project Path="src/SSHVPN.Client/SSHVPN.Client.csproj" />
     <Project Path="src/SSHVPN.Protocol/SSHVPN.Protocol.csproj" />
     <Project Path="src/SSHVPN.Server/SSHVPN.Server.csproj" />
