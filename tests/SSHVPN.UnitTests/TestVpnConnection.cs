@@ -8,6 +8,8 @@ public class TestVpnConnection : IVpnConnection
 
     public Task ConnectAsync(CancellationToken cancellationToken)
     {
+        if (cancellationToken.IsCancellationRequested) return Task.FromCanceled(cancellationToken);
+        
         IsConnected = true;
         return Task.CompletedTask;
     }
