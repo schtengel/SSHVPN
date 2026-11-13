@@ -1,28 +1,64 @@
-﻿using System.Text;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+﻿using System.Windows;
 using SSHVPN.Client.Core.Connection.Abstractions;
 
 namespace SSHVPN.Client;
 
-/// <summary>
-/// Interaction logic for MainWindow.xaml
-/// </summary>
 public partial class MainWindow : Window
 {
     private readonly IVpnConnection _vpnConnection;
-    
-    public MainWindow(IVpnConnection vpnConnection)
+    private readonly ISshTransport _sshTransport;
+
+    public MainWindow(IVpnConnection vpnConnection, ISshTransport sshTransport)
     {
         InitializeComponent();
 
         _vpnConnection = vpnConnection;
+        _sshTransport = sshTransport;
+    }
+
+    private async void ConnectionButton_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        ConnectionButton.IsEnabled = false;
+
+        try
+        {
+            if (_vpnConnection.IsConnected)
+            {
+                StatusText.Text = "Disconnecting...";
+
+                await _vpnConnection.DisconnectAsync(
+                    CancellationToken.None);
+
+                StatusText.Text = "Disconnected";
+                ConnectionButton.Content = "Connect";
+            }
+            else
+            {
+                StatusText.Text = "Connecting...";
+
+                await _vpnConnection.ConnectAsync(
+                    CancellationToken.None);
+
+                StatusText.Text = "Connected";
+                ConnectionButton.Content = "Disconnect";
+                
+                var output = await _sshTransport.ExecuteCommandAsync("whoami", CancellationToken.None);
+
+                MessageBox.Show(output);
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusText.Text = $"Error: {ex.Message}";
+            ConnectionButton.Content = "Connect";
+        }
+        finally
+        {
+            ConnectionButton.IsEnabled = true;
+        }
+        
+        
     }
 }

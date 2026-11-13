@@ -1,12 +1,35 @@
 ﻿<Window x:Class="SSHVPN.Client.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:SSHVPN.Client"
-        mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+        Title="SSHVPN"
+        Height="300"
+        Width="450"
+        WindowStartupLocation="CenterScreen">
 
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="SSH Connection"
+                   FontSize="22"
+                   FontWeight="Bold"
+                   VerticalAlignment="Center"
+                   HorizontalAlignment="Center"/>
+
+        <TextBlock x:Name="StatusText"
+                   Grid.Row="1"
+                   Text="Disconnected"
+                   FontSize="14"
+                   HorizontalAlignment="Center"
+                   Margin="0,10"/>
+
+        <Button x:Name="ConnectionButton"
+                Grid.Row="2"
+                Content="Connect"
+                Height="40"
+                Click="ConnectionButton_Click"/>
     </Grid>
 </Window>
