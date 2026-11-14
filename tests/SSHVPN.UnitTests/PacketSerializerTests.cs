@@ -98,4 +98,54 @@ public class PacketSerializerTests
 
         Assert.Equal(0, stream.Length);
     }
+    
+    [Fact]
+    public async Task ReadAsync_ShouldRejectUnknownPacketType()
+    {
+        // Arrange
+        byte[] data =
+        {
+            255,
+            0, 0, 0, 0
+        };
+
+        using var stream = new MemoryStream(data);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<InvalidDataException>(
+            () => PacketSerializer.ReadAsync(stream));
+    }
+    
+    [Fact]
+    public async Task ReadAsync_ShouldHandlePartialReads()
+    {
+        // Arrange
+        byte[] data =
+        {
+            (byte)PacketType.Data,
+            0, 0, 0, 3,
+            10, 20, 30
+        };
+
+        await using var stream = new PartialReadStream(data);
+
+        // Act
+        Packet packet = await PacketSerializer.ReadAsync(stream);
+
+        // Assert
+        Assert.Equal(PacketType.Data, packet.Type);
+        Assert.Equal(new byte[] { 10, 20, 30 }, packet.Payload);
+    }
+}
+
+internal sealed class PartialReadStream(byte[] data) : MemoryStream(data)
+{
+    public override ValueTask<int> ReadAsync(
+        Memory<byte> buffer,
+        CancellationToken cancellationToken = default)
+    {
+        return base.ReadAsync(
+            buffer[..Math.Min(buffer.Length, 2)],
+            cancellationToken);
+    }
 }
