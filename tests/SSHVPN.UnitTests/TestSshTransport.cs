@@ -49,4 +49,11 @@ public class TestSshTransport : ISshTransport
 
         return Task.FromResult(CommandOutput);
     }
+
+    public Task<ISshDataChannel> OpenDataChannelAsync(string command, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        return Task.FromResult<ISshDataChannel>(new TestSshDataChannel());
+    }
 }
