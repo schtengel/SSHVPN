@@ -133,6 +133,28 @@ public sealed class SshTransport : ISshTransport, IDisposable
         return sshCommand.Result;
     }
 
+    public Task<ISshDataChannel> OpenDataChannelAsync(string command, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (_client is null || !_client.IsConnected)
+            throw new InvalidOperationException("SSH client is not connected.");
+
+        var sshCommand = _client.CreateCommand(command);
+
+        try
+        {
+            ISshDataChannel channel = new SshDataChannel(sshCommand);
+
+            return Task.FromResult(channel);
+        }
+        catch
+        {
+            sshCommand.Dispose();
+            throw;
+        }
+    }
+
     public void Dispose()
     {
         _client?.Dispose();

@@ -11,4 +11,6 @@ public interface ISshTransport
     void Disconnect();
 
     Task<string> ExecuteCommandAsync(string command, CancellationToken cancellationToken);
+
+    Task<ISshDataChannel> OpenDataChannelAsync(string command, CancellationToken cancellationToken);
 }
