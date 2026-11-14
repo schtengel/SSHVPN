@@ -40,6 +40,9 @@ public static class PacketSerializer
 
         var type = (PacketType)header[0];
 
+        if (!Enum.IsDefined(type))
+            throw new InvalidDataException($"Unknown packet type: {(byte)type}");
+
         int payloadLength = BinaryPrimitives.ReadInt32BigEndian(header.AsSpan(1, 4));
 
         if (payloadLength < 0 || payloadLength > MaxPayloadSize) 

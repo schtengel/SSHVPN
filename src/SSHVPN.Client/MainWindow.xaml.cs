@@ -1,4 +1,6 @@
-﻿using System.Windows;
+﻿using System.Text;
+using System.Windows;
+using SSHVPN.Protocol;
 using SSHVPN.Client.Core.Connection.Abstractions;
 
 namespace SSHVPN.Client;
@@ -47,6 +49,18 @@ public partial class MainWindow : Window
                 var output = await _sshTransport.ExecuteCommandAsync("whoami", CancellationToken.None);
 
                 MessageBox.Show(output);
+
+                //Protocol Testing
+                /*await using var channel = await _sshTransport.OpenDataChannelAsync("cat", CancellationToken.None);
+
+                var sentPacket = new Packet(PacketType.Data, Encoding.UTF8.GetBytes("SSHVPN protocol test"));
+
+                await PacketSerializer.WriteAsync(channel.Input, sentPacket);
+
+                Packet receivedPacket = await PacketSerializer.ReadAsync(channel.Output);
+
+                MessageBox.Show($"Type: {receivedPacket.Type}\n +" +
+                                $"Payload: {Encoding.UTF8.GetString(receivedPacket.Payload)}");*/
             }
         }
         catch (Exception ex)
