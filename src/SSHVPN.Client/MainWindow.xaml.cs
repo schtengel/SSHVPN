@@ -1,5 +1,7 @@
-﻿using System.Text;
+﻿using System.IO;
+using System.Text;
 using System.Windows;
+using SSHVPN.Client.Core.Connection;
 using SSHVPN.Protocol;
 using SSHVPN.Client.Core.Connection.Abstractions;
 
@@ -46,21 +48,37 @@ public partial class MainWindow : Window
                 StatusText.Text = "Connected";
                 ConnectionButton.Content = "Disconnect";
                 
+                StatusText.Text = "Executing whoami...";
+                
                 var output = await _sshTransport.ExecuteCommandAsync("whoami", CancellationToken.None);
 
                 MessageBox.Show(output);
 
+                StatusText.Text = "Opening SSH data channel...";
+
                 //Protocol Testing
-                await using var channel = await _sshTransport.OpenDataChannelAsync("dotnet ~/sshvpn/SSHVPN.Server.dll", CancellationToken.None);
+                await using var channel = await _sshTransport.OpenDataChannelAsync("dotnet /home/vpnuser/sshvpn/SSHVPN.Server.dll 2>" +
+                    "/home/vpnuser/sshvpn/server.log", CancellationToken.None);
+                
+                StatusText.Text = "Performing handshake...";
+                
+                var handshake = new VpnHandshake();
+
+                await handshake.PerformAsync(channel, CancellationToken.None);
+                
+                StatusText.Text = "Handshake successful. Sending data...";
 
                 var sentPacket = new Packet(PacketType.Data, Encoding.UTF8.GetBytes("Hello from SSHVPN.Client"));
 
                 await PacketSerializer.WriteAsync(channel.Input, sentPacket);
+                
+                StatusText.Text = "Waiting for server response...";
 
                 Packet receivedPacket = await PacketSerializer.ReadAsync(channel.Output);
 
-                MessageBox.Show($"Type: {receivedPacket.Type}\n" +
-                                $"Payload: {Encoding.UTF8.GetString(receivedPacket.Payload)}");
+                MessageBox.Show($"Handshake: successful\n" +
+                                            $"Type: {receivedPacket.Type}\n" +
+                                            $"Payload: {Encoding.UTF8.GetString(receivedPacket.Payload)}");
             }
         }
         catch (Exception ex)
