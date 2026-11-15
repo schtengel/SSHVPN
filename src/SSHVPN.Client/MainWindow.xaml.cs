@@ -51,16 +51,16 @@ public partial class MainWindow : Window
                 MessageBox.Show(output);
 
                 //Protocol Testing
-                /*await using var channel = await _sshTransport.OpenDataChannelAsync("cat", CancellationToken.None);
+                await using var channel = await _sshTransport.OpenDataChannelAsync("dotnet ~/sshvpn/SSHVPN.Server.dll", CancellationToken.None);
 
-                var sentPacket = new Packet(PacketType.Data, Encoding.UTF8.GetBytes("SSHVPN protocol test"));
+                var sentPacket = new Packet(PacketType.Data, Encoding.UTF8.GetBytes("Hello from SSHVPN.Client"));
 
                 await PacketSerializer.WriteAsync(channel.Input, sentPacket);
 
                 Packet receivedPacket = await PacketSerializer.ReadAsync(channel.Output);
 
-                MessageBox.Show($"Type: {receivedPacket.Type}\n +" +
-                                $"Payload: {Encoding.UTF8.GetString(receivedPacket.Payload)}");*/
+                MessageBox.Show($"Type: {receivedPacket.Type}\n" +
+                                $"Payload: {Encoding.UTF8.GetString(receivedPacket.Payload)}");
             }
         }
         catch (Exception ex)
