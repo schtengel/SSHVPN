@@ -9,7 +9,7 @@ public class VpnConnection(ISshTransport sshTransport, SshConnectionOptions opti
 
     private ISshDataChannel? _dataChannel;
 
-    public bool IsConnected => sshTransport.IsConnected && _dataChannel is not null;
+    public bool IsConnected => sshTransport.IsConnected && _dataChannel is { Completion.IsCompleted: false };
 
     public async Task ConnectAsync(CancellationToken cancellationToken)
     {
@@ -27,6 +27,8 @@ public class VpnConnection(ISshTransport sshTransport, SshConnectionOptions opti
                 _dataChannel = await sshTransport.OpenDataChannelAsync(options.ServerCommand, cancellationToken);
 
                 await handshake.PerformAsync(_dataChannel, cancellationToken);
+
+                _ = MonitorDataChannelAsync(_dataChannel);
             }
             catch
             {
@@ -65,6 +67,44 @@ public class VpnConnection(ISshTransport sshTransport, SshConnectionOptions opti
             {
                 if (channel is not null)
                     await channel.DisposeAsync();
+            }
+            finally
+            {
+                sshTransport.Disconnect();
+            }
+        }
+        finally
+        {
+            _connectionLock.Release();
+        }
+    }
+
+    private async Task MonitorDataChannelAsync(ISshDataChannel channel)
+    {
+        try
+        {
+            await channel.Completion;
+        }
+        catch (OperationCanceledException)
+        {
+
+        }
+        catch
+        {
+            
+        }
+
+        await _connectionLock.WaitAsync();
+
+        try
+        {
+            if (!ReferenceEquals(_dataChannel, channel)) return;
+
+            _dataChannel = null;
+
+            try
+            {
+                await channel.DisposeAsync();
             }
             finally
             {
