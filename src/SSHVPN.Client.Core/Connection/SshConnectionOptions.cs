@@ -5,4 +5,5 @@ public sealed record SshConnectionOptions(
     int Port,
     string Username,
     string PrivateKeyPath,
-    string ExpectedHostKeyFingerprint);
+    string ExpectedHostKeyFingerprint,
+    string ServerCommand);

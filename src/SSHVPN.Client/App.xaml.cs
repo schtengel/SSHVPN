@@ -38,6 +38,7 @@ public partial class App : Application
         services.AddSingleton(sshOptions);
 
         services.AddSingleton<ISshTransport, SshTransport>();
+        services.AddSingleton<VpnHandshake>();
         services.AddSingleton<IVpnConnection, VpnConnection>();
         services.AddTransient<MainWindow>();
 

@@ -2,12 +2,14 @@ using SSHVPN.Client.Core.Connection.Abstractions;
 
 namespace SSHVPN.Client.Core.Connection;
 
-public class VpnConnection(ISshTransport sshTransport, SshConnectionOptions options) : IVpnConnection
+public class VpnConnection(ISshTransport sshTransport, SshConnectionOptions options, VpnHandshake handshake) : IVpnConnection
 {
 
     private readonly SemaphoreSlim _connectionLock = new(1, 1);
 
-    public bool IsConnected => sshTransport.IsConnected;
+    private ISshDataChannel? _dataChannel;
+
+    public bool IsConnected => sshTransport.IsConnected && _dataChannel is not null;
 
     public async Task ConnectAsync(CancellationToken cancellationToken)
     {
@@ -15,9 +17,34 @@ public class VpnConnection(ISshTransport sshTransport, SshConnectionOptions opti
 
         try
         {
-            if (sshTransport.IsConnected) return;
+            if (IsConnected) return;
 
-            await sshTransport.ConnectAsync(options, cancellationToken);
+            try
+            {
+                if (!sshTransport.IsConnected)
+                    await sshTransport.ConnectAsync(options, cancellationToken);
+
+                _dataChannel = await sshTransport.OpenDataChannelAsync(options.ServerCommand, cancellationToken);
+
+                await handshake.PerformAsync(_dataChannel, cancellationToken);
+            }
+            catch
+            {
+                var channel = _dataChannel;
+                _dataChannel = null;
+
+                try
+                {
+                    if (channel is not null)
+                        await channel.DisposeAsync();
+                }
+                finally
+                {
+                    sshTransport.Disconnect();
+                }
+
+                throw;
+            }
         }
         finally
         {
@@ -31,7 +58,18 @@ public class VpnConnection(ISshTransport sshTransport, SshConnectionOptions opti
 
         try
         {
-            sshTransport.Disconnect();
+            var channel = _dataChannel;
+            _dataChannel = null;
+
+            try
+            {
+                if (channel is not null)
+                    await channel.DisposeAsync();
+            }
+            finally
+            {
+                sshTransport.Disconnect();
+            }
         }
         finally
         {
