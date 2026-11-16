@@ -4,6 +4,15 @@ namespace SSHVPN.UnitTests;
 
 public class TestVpnConnection : IVpnConnection
 {
+    public event EventHandler<VpnConnectionLostEventArgs>? ConnectionLost;
+
+    public void RaiseConnectionLost(Exception? error = null)
+    {
+        ConnectionLost?.Invoke(
+            this,
+            new VpnConnectionLostEventArgs(error));
+    }
+    
     public bool IsConnected { get; private set; }
 
     public Task ConnectAsync(CancellationToken cancellationToken)

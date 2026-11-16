@@ -1,5 +1,6 @@
 
 using SSHVPN.Client.Core.Connection;
+using SSHVPN.Client.Core.Connection.Abstractions;
 using SSHVPN.Protocol;
 
 namespace SSHVPN.UnitTests;
@@ -187,5 +188,37 @@ public class VpnConnectionTests
         Assert.True(connection.IsConnected);
         Assert.Equal(2, transport.ConnectCalls);
         Assert.Equal(2, transport.OpenDataChannelCalls);
+    }
+    
+    [Fact]
+    public async Task MonitorDataChannel_WhenProcessFails_ShouldRaiseConnectionLost()
+    {
+        // Arrange
+        var transport = new TestSshTransport();
+
+        var connection = new VpnConnection(
+            transport,
+            _options,
+            new VpnHandshake());
+
+        var eventSource = new TaskCompletionSource<VpnConnectionLostEventArgs>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+
+        connection.ConnectionLost += (_, args) =>
+            eventSource.TrySetResult(args);
+
+        await connection.ConnectAsync(CancellationToken.None);
+
+        var expectedException = new InvalidOperationException("Server crashed.");
+
+        // Act
+        transport.DataChannel!.Fail(expectedException);
+
+        var eventArgs = await eventSource.Task.WaitAsync(
+            TimeSpan.FromSeconds(2));
+
+        // Assert
+        Assert.Same(expectedException, eventArgs.Error);
+        Assert.False(connection.IsConnected);
     }
 }

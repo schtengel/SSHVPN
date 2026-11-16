@@ -16,6 +16,11 @@ public class TestSshDataChannel : ISshDataChannel
     {
         _completion.TrySetResult(true);
     }
+    
+    public void Fail(Exception exception)
+    {
+        _completion.TrySetException(exception);
+    }
 
     public bool IsDisposed { get; private set; }
 
