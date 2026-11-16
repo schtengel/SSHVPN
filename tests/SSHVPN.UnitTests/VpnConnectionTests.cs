@@ -153,4 +153,39 @@ public class VpnConnectionTests
         Assert.True(channel.IsDisposed);
         Assert.Equal(1, transport.DisconnectCalls);
     }
+    
+    [Fact]
+    public async Task ConnectAsync_AfterServerProcessExits_ShouldCreateNewSession()
+    {
+        // Arrange
+        var transport = new TestSshTransport();
+
+        var connection = new VpnConnection(
+            transport,
+            _options,
+            new VpnHandshake());
+
+        await connection.ConnectAsync(CancellationToken.None);
+
+        var previousChannel = transport.DataChannel!;
+
+        // Act
+        previousChannel.Complete();
+
+        await transport.DisconnectedSignal.Task.WaitAsync(
+            TimeSpan.FromSeconds(2));
+
+        await connection.ConnectAsync(CancellationToken.None);
+
+        // Assert
+        var currentChannel = transport.DataChannel!;
+
+        Assert.NotSame(previousChannel, currentChannel);
+        Assert.True(previousChannel.IsDisposed);
+        Assert.False(currentChannel.IsDisposed);
+
+        Assert.True(connection.IsConnected);
+        Assert.Equal(2, transport.ConnectCalls);
+        Assert.Equal(2, transport.OpenDataChannelCalls);
+    }
 }

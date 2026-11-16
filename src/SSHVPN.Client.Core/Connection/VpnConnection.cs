@@ -21,6 +21,22 @@ public class VpnConnection(ISshTransport sshTransport, SshConnectionOptions opti
 
             try
             {
+                var previousChannel = _dataChannel;
+
+                if (previousChannel is not null)
+                {
+                    _dataChannel = null;
+
+                    try
+                    {
+                        await previousChannel.DisposeAsync();
+                    }
+                    finally
+                    {
+                        sshTransport.Disconnect();
+                    }
+                }
+                
                 if (!sshTransport.IsConnected)
                     await sshTransport.ConnectAsync(options, cancellationToken);
 
