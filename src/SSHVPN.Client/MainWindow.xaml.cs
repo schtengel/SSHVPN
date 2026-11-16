@@ -11,11 +11,23 @@ public partial class MainWindow : Window
 {
     private readonly IVpnConnection _vpnConnection;
 
-    public MainWindow(IVpnConnection vpnConnection, ISshTransport sshTransport)
+    public MainWindow(IVpnConnection vpnConnection)
     {
         InitializeComponent();
 
         _vpnConnection = vpnConnection;
+
+        _vpnConnection.ConnectionLost += VpnConnection_ConnectionLost;
+    }
+
+    private void VpnConnection_ConnectionLost(object? sender, VpnConnectionLostEventArgs e)
+    {
+        Dispatcher.InvokeAsync(() =>
+        {
+            StatusText.Text = e.Message;
+            ConnectionButton.Content = "Connect";
+            ConnectionButton.IsEnabled = true;
+        });
     }
 
     private async void ConnectionButton_Click(
@@ -54,7 +66,12 @@ public partial class MainWindow : Window
         {
             ConnectionButton.IsEnabled = true;
         }
+    }
+
+    protected override void OnClosed(EventArgs e)
+    {
+        _vpnConnection.ConnectionLost -= VpnConnection_ConnectionLost;
         
-        
+        base.OnClosed(e);
     }
 }

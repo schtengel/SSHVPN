@@ -11,14 +11,22 @@ public class SshDataChannel : ISshDataChannel
     private readonly CancellationTokenSource _lifetimeCts = new();
 
     private readonly Task _completion;
-    private bool _disposed;
+    private readonly object _disposeAsync = new();
+    private Task? _disposeTask;
     
-    public async ValueTask DisposeAsync()
+    
+    public ValueTask DisposeAsync()
     {
-        if (_disposed) return;
+        lock (_disposeAsync)
+        {
+            _disposeTask ??= DisposeCoreAsync();
 
-        _disposed = true;
+            return new ValueTask(_disposeTask);
+        }
+    }
 
+    public async Task DisposeCoreAsync()
+    {
         try
         {
             await _input.DisposeAsync();
@@ -35,10 +43,20 @@ public class SshDataChannel : ISshDataChannel
             {
 
             }
+            catch (Exception)
+            {
+                //ignored
+            }
             finally
             {
-                _command.Dispose();
-                _lifetimeCts.Dispose();
+                try
+                {
+                    _command.Dispose();
+                }
+                finally
+                {
+                    _lifetimeCts.Dispose();
+                }
             }
         }
     }

@@ -9,6 +9,8 @@ public class VpnConnection(ISshTransport sshTransport, SshConnectionOptions opti
 
     private ISshDataChannel? _dataChannel;
 
+    public event EventHandler<VpnConnectionLostEventArgs>? ConnectionLost;
+
     public bool IsConnected => sshTransport.IsConnected && _dataChannel is { Completion.IsCompleted: false };
 
     public async Task ConnectAsync(CancellationToken cancellationToken)
@@ -97,17 +99,15 @@ public class VpnConnection(ISshTransport sshTransport, SshConnectionOptions opti
 
     private async Task MonitorDataChannelAsync(ISshDataChannel channel)
     {
+        Exception? completionError = null;
+
         try
         {
             await channel.Completion;
         }
-        catch (OperationCanceledException)
+        catch (Exception ex)
         {
-
-        }
-        catch
-        {
-            
+            completionError = ex;
         }
 
         await _connectionLock.WaitAsync();
@@ -122,14 +122,25 @@ public class VpnConnection(ISshTransport sshTransport, SshConnectionOptions opti
             {
                 await channel.DisposeAsync();
             }
-            finally
+            catch (Exception ex)
+            {
+                completionError ??= ex;
+            }
+
+            try
             {
                 sshTransport.Disconnect();
+            }
+            catch (Exception ex)
+            {
+                completionError ??= ex;
             }
         }
         finally
         {
             _connectionLock.Release();
         }
+
+        ConnectionLost?.Invoke(this, new VpnConnectionLostEventArgs(completionError));
     }
 }
