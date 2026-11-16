@@ -13,6 +13,9 @@ public class TestSshTransport : ISshTransport
 
     public int DisconnectCalls { get; private set; }
 
+    public TaskCompletionSource<bool> DisconnectedSignal { get; } =
+        new(TaskCreationOptions.RunContinuationsAsynchronously);
+
     public int OpenDataChannelCalls { get; private set; }
 
     public SshConnectionOptions? LastOptions { get; private set; }
@@ -42,6 +45,7 @@ public class TestSshTransport : ISshTransport
     {
         DisconnectCalls++;
         IsConnected = false;
+        DisconnectedSignal.TrySetResult(true);
     }
 
     public string CommandOutput { get; set; } = "test output";
