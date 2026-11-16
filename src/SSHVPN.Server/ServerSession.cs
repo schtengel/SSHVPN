@@ -9,10 +9,21 @@ public sealed class ServerSession(ILogger<ServerSession> logger)
     {
         logger.LogInformation("Server session started.");
 
-        if (!await PerformHandshakeAsync(input, output, cancellationToken))
-            return;
+        try
+        {
+            if (!await PerformHandshakeAsync(input, output, cancellationToken))
+                return;
 
-        await ProcessPacketAsync(input, output, cancellationToken);
+            await ProcessPacketAsync(input, output, cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            logger.LogInformation("Server session cancelled.");
+        }
+        finally
+        {
+            logger.LogInformation("Server session ended.");
+        }
         
         logger.LogInformation("Server session ended.");
     }
